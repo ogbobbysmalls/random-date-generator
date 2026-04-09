@@ -18,7 +18,6 @@ h1 {
   text-align: center;
   color: #ff4d8d;
   margin-bottom: 20px;
-  font-family: "M PLUS Rounded 1c", sans-serif;
   font-optical-sizing: auto;
   font-weight: <weight>;
   font-style: normal;
@@ -37,10 +36,8 @@ h1 {
 }
 
 h2 { 
-  font-family: "M PLUS Rounded 1c", sans-serif;
   color: #000000;
   margin-bottom: 20px;
-  font-family: "Playwrite IE", cursive;
   font-optical-sizing: auto;
   font-weight: <weight>;
   font-style: normal;
