@@ -3,7 +3,7 @@ const SUPABASE_ANON_KEY = "sb_publishable_At0pbd5rRAbdWUF6gL0Kgw_O0QPSx0-";
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// elements
+// inputs
 const titleInput = document.getElementById("title");
 const descInput = document.getElementById("description");
 const categoryInput = document.getElementById("category");
@@ -12,14 +12,10 @@ const budgetInput = document.getElementById("budget");
 const addBtn = document.getElementById("addBtn");
 const generateBtn = document.getElementById("generateBtn");
 
-const randomTitle = document.getElementById("randomTitle");
-const randomDescription = document.getElementById("randomDescription");
-const randomCard = document.getElementById("randomCard");
-
-const toast = document.getElementById("toast");
 const list = document.getElementById("dateList");
 
-// TOGGLES
+// UI
+const toast = document.getElementById("toast");
 const addBox = document.getElementById("addBox");
 const ideasBox = document.getElementById("ideasBox");
 
@@ -38,9 +34,12 @@ function showToast(msg) {
   setTimeout(() => toast.classList.remove("show"), 2000);
 }
 
-// fetch + render
+// 🔥 RENDER IDEAS (FIX)
 async function renderList() {
-  const { data } = await supabaseClient.from("date_ideas").select("*");
+  const { data } = await supabaseClient
+    .from("date_ideas")
+    .select("*")
+    .order("id", { ascending: false });
 
   list.innerHTML = "";
 
@@ -52,11 +51,34 @@ async function renderList() {
   data.forEach((idea) => {
     const li = document.createElement("li");
     li.className = "date-item";
-    li.innerHTML = `<span>${idea.title}</span>`;
+
+    li.innerHTML = `
+      <div>
+        <strong>${idea.title}</strong><br/>
+        <small>${idea.description}</small>
+      </div>
+    `;
+
+    const del = document.createElement("button");
+    del.innerText = "🗑";
+    del.className = "deleteBtn";
+
+    del.onclick = async () => {
+      await supabaseClient
+        .from("date_ideas")
+        .delete()
+        .eq("id", idea.id);
+
+      showToast("Verwijderd 🗑");
+      renderList();
+    };
+
+    li.appendChild(del);
     list.appendChild(li);
   });
 }
 
+// ➕ ADD
 addBtn.addEventListener("click", async () => {
   await supabaseClient.from("date_ideas").insert([{
     title: titleInput.value,
@@ -68,20 +90,17 @@ addBtn.addEventListener("click", async () => {
   titleInput.value = "";
   descInput.value = "";
 
-  showToast("💖 Toegevoegd!");
-
+  showToast("Toegevoegd 💖");
   renderList();
 });
 
+// 🎲 RANDOM
 generateBtn.addEventListener("click", async () => {
   const { data } = await supabaseClient.from("date_ideas").select("*");
 
   const rand = data[Math.floor(Math.random() * data.length)];
 
-  randomTitle.innerText = rand.title;
-  randomDescription.innerText = rand.description;
-
-  randomCard.classList.remove("hidden");
+  alert(rand.title + "\n\n" + rand.description);
 });
 
 renderList();
