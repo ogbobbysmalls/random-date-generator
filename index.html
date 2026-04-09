@@ -6,7 +6,6 @@
 
   <title>💖 Date App</title>
 
-  <!-- FONT -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c&display=swap" rel="stylesheet">
@@ -21,45 +20,26 @@
 
   <h1>💖 Date Generator</h1>
 
-<!-- RANDOM -->
-<div class="card glass">
-  <h2>🎲 Random date</h2>
+  <!-- RANDOM -->
+  <div class="card glass">
+    <h2>🎲 Random date</h2>
 
-  <select id="filterCategory">
-    <option value="">Alle categorieën</option>
-    <option value="Buiten">Buiten</option>
-    <option value="Thuis">Thuis</option>
-    <option value="Eten">Eten</option>
-    <option value="Avontuur">Avontuur</option>
-  </select>
+    <button class="primaryBtn" id="generateBtn">✨ Verras me</button>
 
-  <select id="filterBudget">
-    <option value="">Alle budgetten</option>
-    <option value="Gratis">Gratis</option>
-    <option value="Goedkoop">Goedkoop</option>
-    <option value="Gemiddeld">Gemiddeld</option>
-    <option value="Duur">Duur</option>
-  </select>
-
-  <button class="primaryBtn" id="generateBtn">✨ Verras me</button>
-
-  <!-- NEW OUTPUT CARD -->
-  <div id="randomCard" class="resultCard hidden">
-    <div class="resultTitle" id="randomTitle"></div>
-    <div class="resultDesc" id="randomDescription"></div>
+    <div id="randomCard" class="resultCard hidden">
+      <div id="randomTitle" class="resultTitle"></div>
+      <div id="randomDescription" class="resultDesc"></div>
+    </div>
   </div>
-</div>
 
   <!-- ADD -->
   <div class="card glass">
-
     <div class="toggle" id="toggleAdd">
       <h2>➕ Voeg date toe</h2>
       <span>▼</span>
     </div>
 
     <div id="addBox" class="collapsible">
-
       <input id="title" placeholder="Titel"/>
       <input id="description" placeholder="Beschrijving"/>
 
@@ -79,14 +59,12 @@
         <option value="Duur">Duur</option>
       </select>
 
-      <button id="addBtn">Toevoegen</button>
-
+      <button class="primaryBtn" id="addBtn">Opslaan</button>
     </div>
   </div>
 
   <!-- IDEAS -->
   <div class="card glass">
-
     <div class="toggle" id="toggleIdeas">
       <h2>💖 Jouw ideeën</h2>
       <span>▼</span>
@@ -95,7 +73,6 @@
     <div id="ideasBox" class="collapsible">
       <ul id="dateList"></ul>
     </div>
-
   </div>
 
 </div>
