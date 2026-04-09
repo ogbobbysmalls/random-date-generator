@@ -2,7 +2,7 @@ console.log("Script loaded");
 
 // --- Supabase setup ---
 const SUPABASE_URL = "https://aavzsvurygojkoxxvssd.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_At0pbd5rRAbdWUF6gL0Kgw_O0QPSx0-Y";
+const SUPABASE_ANON_KEY = "sb_publishable_At0pbd5rRAbdWUF6gL0Kgw_O0QPSx0-";
 
 // FIX: correcte v2 init
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
