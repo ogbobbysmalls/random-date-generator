@@ -5,7 +5,9 @@ body {
   padding: 20px;
 }
 
-/* container */
+/* =====================
+   CONTAINER
+===================== */
 .container {
   max-width: 650px;
   margin: auto;
@@ -18,7 +20,9 @@ h1 {
   margin-bottom: 20px;
 }
 
-/* ⭐ elk blok echt apart */
+/* =====================
+   CARDS (ALLE BLOKKEN)
+===================== */
 .card {
   background: white;
   padding: 20px;
@@ -28,7 +32,9 @@ h1 {
   border: 1px solid rgba(255, 77, 141, 0.08);
 }
 
-/* inputs */
+/* =====================
+   INPUTS + SELECTS
+===================== */
 input, select {
   width: 100%;
   padding: 10px;
@@ -39,7 +45,9 @@ input, select {
   font-size: 14px;
 }
 
-/* buttons */
+/* =====================
+   BUTTONS
+===================== */
 button {
   padding: 10px;
   background: #ff4d8d;
@@ -50,13 +58,16 @@ button {
   margin-top: 10px;
   width: 100%;
   font-size: 14px;
+  transition: 0.2s ease;
 }
 
 button:hover {
   background: #ff2f7a;
 }
 
-/* random result box */
+/* =====================
+   RANDOM RESULT CARD
+===================== */
 .card-result {
   margin-top: 12px;
   padding: 15px;
@@ -64,15 +75,16 @@ button:hover {
   border-radius: 12px;
 }
 
-/* hidden class */
+/* =====================
+   HIDDEN UTILITY
+===================== */
 .hidden {
   display: none;
 }
 
-/* =========================
-   🔽 JOUW IDEEËN (ACCORDION)
-========================= */
-
+/* =====================
+   TOGGLES (INKLAPBAAR)
+===================== */
 .toggle-header {
   cursor: pointer;
   user-select: none;
@@ -82,7 +94,7 @@ button:hover {
   font-size: 18px;
 }
 
-/* smooth open/close */
+/* smooth open/close animation */
 .collapsed {
   max-height: 0;
   overflow: hidden;
@@ -91,18 +103,21 @@ button:hover {
 }
 
 .expanded {
-  max-height: 600px;
+  max-height: 800px;
   opacity: 1;
   transition: all 0.35s ease;
 }
 
-/* list items */
+/* =====================
+   LIST (JOUW IDEEËN)
+===================== */
 #dateList {
   list-style: none;
   padding: 0;
   margin-top: 10px;
 }
 
+/* item styling */
 .date-item {
   display: flex;
   justify-content: space-between;
@@ -114,16 +129,23 @@ button:hover {
   font-size: 14px;
 }
 
-/* delete button in list */
+/* delete knop in list */
 .date-item button {
   width: auto;
   padding: 6px 10px;
   margin: 0;
   font-size: 12px;
   border-radius: 8px;
+  background: #ff4d8d;
 }
 
-/* mobile optimalisatie */
+.date-item button:hover {
+  background: #ff2f7a;
+}
+
+/* =====================
+   MOBILE RESPONSIVE
+===================== */
 @media (max-width: 600px) {
   .card {
     padding: 15px;
@@ -132,19 +154,8 @@ button:hover {
   h1 {
     font-size: 22px;
   }
-}
 
-.hidden { display: none; }
-
-.collapsed {
-  max-height: 0;
-  overflow: hidden;
-  opacity: 0;
-  transition: all 0.35s ease;
-}
-
-.expanded {
-  max-height: 700px;
-  opacity: 1;
-  transition: all 0.35s ease;
+  .toggle-header {
+    font-size: 16px;
+  }
 }
