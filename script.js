@@ -8,6 +8,8 @@ const titleInput       = document.getElementById("title");
 const descInput        = document.getElementById("description");
 const categoryInput    = document.getElementById("category");
 const budgetInput      = document.getElementById("budget");
+const locationInput    = document.getElementById("location");
+const durationInput    = document.getElementById("duration");
 const addBtn           = document.getElementById("addBtn");
 const addBtnLabel      = document.getElementById("addBtnLabel");
 const cancelBtn        = document.getElementById("cancelBtn");
@@ -16,13 +18,12 @@ const list             = document.getElementById("dateList");
 const toast            = document.getElementById("toast");
 const ideaCount        = document.getElementById("ideaCount");
 const searchInput      = document.getElementById("searchInput");
-const filterCategory   = document.getElementById("filterCategory");
-const filterBudget     = document.getElementById("filterBudget");
 const loadingOverlay   = document.getElementById("loadingOverlay");
 const confirmModal     = document.getElementById("confirmModal");
 const confirmDeleteBtn = document.getElementById("confirmDelete");
 const cancelDeleteBtn  = document.getElementById("cancelDelete");
 const favOnlyCheck     = document.getElementById("favOnlyCheck");
+const activeFiltersEl  = document.getElementById("activeFilters");
 
 let editId       = null;
 let deleteId     = null;
@@ -42,6 +43,57 @@ function showToast(msg) {
   toastTimeout = setTimeout(() => toast.classList.remove("show"), 2200);
 }
 
+// ===== DROPDOWN TOGGLE =====
+function toggleDropdown(id) {
+  const drop = document.getElementById(id);
+  const allDrops = document.querySelectorAll(".multi-select-drop");
+  allDrops.forEach(d => { if (d.id !== id) d.classList.add("hidden"); });
+  drop.classList.toggle("hidden");
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener("click", (e) => {
+  if (!e.target.closest(".multi-select-wrap")) {
+    document.querySelectorAll(".multi-select-drop").forEach(d => d.classList.add("hidden"));
+  }
+});
+
+// ===== GET CHECKED VALUES =====
+function getChecked(className) {
+  return Array.from(document.querySelectorAll(`.${className}:checked`)).map(el => el.value);
+}
+
+// ===== UPDATE FILTER LABELS =====
+function updateFilterLabel(labelId, values, defaultText) {
+  const el = document.getElementById(labelId);
+  if (!el) return;
+  el.innerText = values.length === 0 ? defaultText : values.join(", ");
+}
+
+// ===== WIRE UP MULTI-SELECT CHANGE EVENTS =====
+function setupMultiSelectListeners() {
+  // Ideas filter checkboxes
+  document.querySelectorAll(".filt-cat, .filt-budget, .filt-loc, .filt-dur").forEach(cb => {
+    cb.addEventListener("change", () => {
+      updateFilterLabel("filterCatLabel", getChecked("filt-cat"), "📂 Categorieën");
+      updateFilterLabel("filterBudgetLabel", getChecked("filt-budget"), "💸 Budget");
+      updateFilterLabel("filterLocLabel", getChecked("filt-loc"), "📍 Locatie");
+      updateFilterLabel("filterDurLabel", getChecked("filt-dur"), "⏱️ Tijdsduur");
+      applyFilters();
+    });
+  });
+
+  // Random filter checkboxes
+  document.querySelectorAll(".rand-cat, .rand-budget, .rand-loc, .rand-dur").forEach(cb => {
+    cb.addEventListener("change", () => {
+      updateFilterLabel("randomFilterCategoryLabel", getChecked("rand-cat"), "📂 Alle categorieën");
+      updateFilterLabel("randomFilterBudgetLabel", getChecked("rand-budget"), "💸 Alle budgetten");
+      updateFilterLabel("randomFilterLocLabel", getChecked("rand-loc"), "📍 Alle locaties");
+      updateFilterLabel("randomFilterDurLabel", getChecked("rand-dur"), "⏱️ Alle tijdsduren");
+    });
+  });
+}
+
 // ===== TOGGLE PANELS =====
 function setupToggle(toggleId, boxId, chevronId) {
   document.getElementById(toggleId).onclick = () => {
@@ -56,15 +108,15 @@ setupToggle("toggleAdd",    "addBox",    "chevronAdd");
 setupToggle("toggleIdeas",  "ideasBox",  "chevronIdeas");
 
 // ===== CANCEL EDIT =====
-cancelBtn.onclick = () => {
-  resetForm();
-};
+cancelBtn.onclick = () => resetForm();
 
 function resetForm() {
   titleInput.value    = "";
   descInput.value     = "";
   categoryInput.value = "";
   budgetInput.value   = "";
+  locationInput.value = "";
+  durationInput.value = "";
   editId              = null;
   addBtnLabel.innerText = "💾 Opslaan";
   addTitleEl.innerText  = "Voeg date toe";
@@ -94,25 +146,60 @@ async function renderList() {
 
 // ===== APPLY FILTERS =====
 function applyFilters() {
-  const search   = searchInput.value.toLowerCase();
-  const cat      = filterCategory.value;
-  const budget   = filterBudget.value;
+  const search      = searchInput.value.toLowerCase();
+  const cats        = getChecked("filt-cat");
+  const budgets     = getChecked("filt-budget");
+  const locations   = getChecked("filt-loc");
+  const durations   = getChecked("filt-dur");
 
   const filtered = allIdeas.filter(idea => {
-    const matchSearch = !search ||
-      idea.title?.toLowerCase().includes(search) ||
-      idea.description?.toLowerCase().includes(search);
-    const matchCat    = !cat    || idea.category === cat;
-    const matchBudget = !budget || idea.budget   === budget;
-    return matchSearch && matchCat && matchBudget;
+    const matchSearch   = !search    || idea.title?.toLowerCase().includes(search) || idea.description?.toLowerCase().includes(search);
+    const matchCat      = !cats.length    || cats.includes(idea.category);
+    const matchBudget   = !budgets.length || budgets.includes(idea.budget);
+    const matchLoc      = !locations.length || locations.includes(idea.location);
+    const matchDur      = !durations.length || durations.includes(idea.duration);
+    return matchSearch && matchCat && matchBudget && matchLoc && matchDur;
   });
 
+  renderActiveFilterChips(cats, budgets, locations, durations);
   renderItems(filtered);
 }
 
-searchInput.addEventListener("input",  applyFilters);
-filterCategory.addEventListener("change", applyFilters);
-filterBudget.addEventListener("change",   applyFilters);
+// ===== ACTIVE FILTER CHIPS =====
+function renderActiveFilterChips(cats, budgets, locations, durations) {
+  const all = [
+    ...cats.map(v => ({ label: v, class: "filt-cat", value: v })),
+    ...budgets.map(v => ({ label: v, class: "filt-budget", value: v })),
+    ...locations.map(v => ({ label: v, class: "filt-loc", value: v })),
+    ...durations.map(v => ({ label: v, class: "filt-dur", value: v })),
+  ];
+
+  if (!all.length) {
+    activeFiltersEl.classList.add("hidden");
+    activeFiltersEl.innerHTML = "";
+    return;
+  }
+
+  activeFiltersEl.classList.remove("hidden");
+  activeFiltersEl.innerHTML = all.map(f =>
+    `<span class="filter-chip" onclick="removeFilter('${f.class}','${f.value}')">
+      ${f.label} ✕
+    </span>`
+  ).join("");
+}
+
+function removeFilter(className, value) {
+  const cb = document.querySelector(`.${className}[value="${value}"]`);
+  if (cb) { cb.checked = false; }
+
+  updateFilterLabel("filterCatLabel", getChecked("filt-cat"), "📂 Categorieën");
+  updateFilterLabel("filterBudgetLabel", getChecked("filt-budget"), "💸 Budget");
+  updateFilterLabel("filterLocLabel", getChecked("filt-loc"), "📍 Locatie");
+  updateFilterLabel("filterDurLabel", getChecked("filt-dur"), "⏱️ Tijdsduur");
+  applyFilters();
+}
+
+searchInput.addEventListener("input", applyFilters);
 
 // ===== RENDER ITEMS =====
 function renderItems(ideas) {
@@ -139,6 +226,8 @@ function renderItems(ideas) {
         <div class="item-badges">
           ${idea.category ? `<span class="badge badge-cat">${categoryEmoji(idea.category)} ${idea.category}</span>` : ""}
           ${idea.budget   ? `<span class="badge badge-budget">${budgetEmoji(idea.budget)} ${idea.budget}</span>` : ""}
+          ${idea.location ? `<span class="badge badge-loc">📍 ${idea.location}</span>` : ""}
+          ${idea.duration ? `<span class="badge badge-dur">⏱️ ${idea.duration}</span>` : ""}
         </div>
       </div>
     `;
@@ -146,18 +235,35 @@ function renderItems(ideas) {
     const actions = document.createElement("div");
     actions.className = "actions";
 
-    // ⭐ Favorite
+    // ⭐ Favorite — FIX: update allIdeas locally to avoid stale state
     const fav = document.createElement("button");
     fav.className = "iconBtn";
     fav.title     = idea.favorite ? "Verwijder favoriet" : "Markeer als favoriet";
     fav.innerText = idea.favorite ? "💖" : "🤍";
     fav.onclick   = async () => {
-      await supabaseClient
+      const newVal = !idea.favorite;
+
+      const { error } = await supabaseClient
         .from("date_ideas")
-        .update({ favorite: !idea.favorite })
+        .update({ favorite: newVal })
         .eq("id", idea.id);
-      showToast(idea.favorite ? "Favoriet verwijderd" : "Favoriet toegevoegd ⭐");
-      renderList();
+
+      if (error) {
+        showToast("❌ Fout bij opslaan");
+        return;
+      }
+
+      // Update local state immediately (fixes the bug)
+      idea.favorite = newVal;
+      const idx = allIdeas.findIndex(i => i.id === idea.id);
+      if (idx !== -1) allIdeas[idx].favorite = newVal;
+
+      fav.innerText = newVal ? "💖" : "🤍";
+      fav.title     = newVal ? "Verwijder favoriet" : "Markeer als favoriet";
+      const titleEl = li.querySelector("strong");
+      if (titleEl) titleEl.innerText = `${idea.title} ${newVal ? "⭐" : ""}`;
+
+      showToast(newVal ? "Favoriet toegevoegd ⭐" : "Favoriet verwijderd");
     };
 
     // ✏️ Edit
@@ -170,11 +276,12 @@ function renderItems(ideas) {
       descInput.value     = idea.description;
       categoryInput.value = idea.category;
       budgetInput.value   = idea.budget;
+      locationInput.value = idea.location || "";
+      durationInput.value = idea.duration || "";
       editId              = idea.id;
       addBtnLabel.innerText = "💾 Bijwerken";
       addTitleEl.innerText  = "Idee bewerken";
 
-      // Open het add-paneel als het dicht is
       const addBox   = document.getElementById("addBox");
       const chevron  = document.getElementById("chevronAdd");
       if (!addBox.classList.contains("open")) {
@@ -182,7 +289,6 @@ function renderItems(ideas) {
         chevron.classList.add("open");
       }
 
-      // Scroll naar het formulier
       document.getElementById("addSection").scrollIntoView({ behavior: "smooth", block: "start" });
       showToast("Bewerkmodus ✏️");
     };
@@ -227,7 +333,6 @@ cancelDeleteBtn.onclick = () => {
   confirmModal.classList.add("hidden");
 };
 
-// Klik buiten modal = sluiten
 confirmModal.addEventListener("click", (e) => {
   if (e.target === confirmModal) {
     deleteId = null;
@@ -248,7 +353,9 @@ addBtn.onclick = async () => {
     title:       title,
     description: descInput.value.trim(),
     category:    categoryInput.value,
-    budget:      budgetInput.value
+    budget:      budgetInput.value,
+    location:    locationInput.value,
+    duration:    durationInput.value,
   };
 
   setLoading(true);
@@ -264,7 +371,6 @@ addBtn.onclick = async () => {
   setLoading(false);
   resetForm();
 
-  // Sluit het formulier na opslaan
   const addBox  = document.getElementById("addBox");
   const chevron = document.getElementById("chevronAdd");
   addBox.classList.remove("open");
@@ -275,21 +381,19 @@ addBtn.onclick = async () => {
 
 // ===== RANDOM =====
 document.getElementById("generateBtn").onclick = async () => {
-  const favOnly  = favOnlyCheck.checked;
-  const filterCat    = document.getElementById("randomFilterCategory").value;
-  const filterBudget = document.getElementById("randomFilterBudget").value;
+  const favOnly    = favOnlyCheck.checked;
+  const randCats   = getChecked("rand-cat");
+  const randBudgets = getChecked("rand-budget");
+  const randLocs   = getChecked("rand-loc");
+  const randDurs   = getChecked("rand-dur");
 
   let pool = allIdeas;
 
-  if (favOnly) {
-    pool = pool.filter(i => i.favorite);
-  }
-  if (filterCat) {
-    pool = pool.filter(i => i.category === filterCat);
-  }
-  if (filterBudget) {
-    pool = pool.filter(i => i.budget === filterBudget);
-  }
+  if (favOnly)           pool = pool.filter(i => i.favorite);
+  if (randCats.length)   pool = pool.filter(i => randCats.includes(i.category));
+  if (randBudgets.length) pool = pool.filter(i => randBudgets.includes(i.budget));
+  if (randLocs.length)   pool = pool.filter(i => randLocs.includes(i.location));
+  if (randDurs.length)   pool = pool.filter(i => randDurs.includes(i.duration));
 
   if (!allIdeas.length) {
     showToast("Nog geen ideeën! Voeg er eerst wat toe 💭");
@@ -306,15 +410,19 @@ document.getElementById("generateBtn").onclick = async () => {
   document.getElementById("randomTitle").innerText = rand.title;
   document.getElementById("randomDescription").innerText = rand.description || "";
 
-  const catEl    = document.getElementById("randomCategory");
-  const budgetEl = document.getElementById("randomBudget");
-  catEl.innerText    = rand.category ? `${categoryEmoji(rand.category)} ${rand.category}` : "";
-  budgetEl.innerText = rand.budget   ? `${budgetEmoji(rand.budget)} ${rand.budget}`       : "";
+  const catEl  = document.getElementById("randomCategory");
+  const budEl  = document.getElementById("randomBudget");
+  const locEl  = document.getElementById("randomLocation");
+  const durEl  = document.getElementById("randomDuration");
 
-  // Reset animatie door kaart even te verbergen
+  catEl.innerText = rand.category ? `${categoryEmoji(rand.category)} ${rand.category}` : "";
+  budEl.innerText = rand.budget   ? `${budgetEmoji(rand.budget)} ${rand.budget}`       : "";
+  locEl.innerText = rand.location ? `📍 ${rand.location}` : "";
+  durEl.innerText = rand.duration ? `⏱️ ${rand.duration}` : "";
+
   const card = document.getElementById("randomCard");
   card.classList.add("hidden");
-  void card.offsetWidth; // reflow
+  void card.offsetWidth;
   card.classList.remove("hidden");
 };
 
@@ -328,4 +436,5 @@ function budgetEmoji(budget) {
 }
 
 // ===== INIT =====
+setupMultiSelectListeners();
 renderList();
