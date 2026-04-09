@@ -21,33 +21,34 @@
 
   <h1>💖 Date Generator</h1>
 
-  <!-- RANDOM -->
-  <div class="card glass">
-    <h2>🎲 Random date</h2>
+<!-- RANDOM -->
+<div class="card glass">
+  <h2>🎲 Random date</h2>
 
-    <select id="filterCategory">
-      <option value="">Alle categorieën</option>
-      <option value="Buiten">Buiten</option>
-      <option value="Thuis">Thuis</option>
-      <option value="Eten">Eten</option>
-      <option value="Avontuur">Avontuur</option>
-    </select>
+  <select id="filterCategory">
+    <option value="">Alle categorieën</option>
+    <option value="Buiten">Buiten</option>
+    <option value="Thuis">Thuis</option>
+    <option value="Eten">Eten</option>
+    <option value="Avontuur">Avontuur</option>
+  </select>
 
-    <select id="filterBudget">
-      <option value="">Alle budgetten</option>
-      <option value="Gratis">Gratis</option>
-      <option value="Goedkoop">Goedkoop</option>
-      <option value="Gemiddeld">Gemiddeld</option>
-      <option value="Duur">Duur</option>
-    </select>
+  <select id="filterBudget">
+    <option value="">Alle budgetten</option>
+    <option value="Gratis">Gratis</option>
+    <option value="Goedkoop">Goedkoop</option>
+    <option value="Gemiddeld">Gemiddeld</option>
+    <option value="Duur">Duur</option>
+  </select>
 
-    <button id="generateBtn">✨ Verras me</button>
+  <button class="primaryBtn" id="generateBtn">✨ Verras me</button>
 
-    <div id="randomCard" class="result hidden">
-      <h3 id="randomTitle"></h3>
-      <p id="randomDescription"></p>
-    </div>
+  <!-- NEW OUTPUT CARD -->
+  <div id="randomCard" class="resultCard hidden">
+    <div class="resultTitle" id="randomTitle"></div>
+    <div class="resultDesc" id="randomDescription"></div>
   </div>
+</div>
 
   <!-- ADD -->
   <div class="card glass">
