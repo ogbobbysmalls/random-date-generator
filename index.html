@@ -5,84 +5,86 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Random Date Generator</title>
 
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css"/>
 
-  <!-- Supabase library -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
 
-  <div class="container">
+<div class="container">
 
-    <h1>💖</h1>
+  <h1>💖 Random Date Generator</h1>
 
-    <!-- --- Voeg een date idee toe --- -->
-    <div class="card">
-      <h2>Voeg een date idee toe</h2>
+  <!-- 🔹 ADD IDEA -->
+  <div class="card">
+    <h2>Voeg een date idee toe</h2>
 
-      <input id="title" placeholder="Titel" />
-      <input id="description" placeholder="Beschrijving" />
+    <input id="title" placeholder="Titel"/>
+    <input id="description" placeholder="Beschrijving"/>
 
-      <select id="category">
-        <option value="">Categorie</option>
-        <option value="Buiten">Buiten</option>
-        <option value="Thuis">Thuis</option>
-        <option value="Eten">Eten</option>
-        <option value="Avontuur">Avontuur</option>
-      </select>
+    <select id="category">
+      <option value="">Categorie</option>
+      <option value="Buiten">Buiten</option>
+      <option value="Thuis">Thuis</option>
+      <option value="Eten">Eten</option>
+      <option value="Avontuur">Avontuur</option>
+    </select>
 
-      <select id="budget">
-        <option value="">Budget</option>
-        <option value="Gratis">Gratis</option>
-        <option value="Goedkoop">Goedkoop</option>
-        <option value="Gemiddeld">Gemiddeld</option>
-        <option value="Duur">Duur</option>
-      </select>
+    <select id="budget">
+      <option value="">Budget</option>
+      <option value="Gratis">Gratis</option>
+      <option value="Goedkoop">Goedkoop</option>
+      <option value="Gemiddeld">Gemiddeld</option>
+      <option value="Duur">Duur</option>
+    </select>
 
-      <button id="addBtn">Voeg toe</button>
+    <button id="addBtn">➕ Toevoegen</button>
+  </div>
+
+  <!-- 🔹 RANDOM -->
+  <div class="card">
+    <h2>🎲 Random date</h2>
+
+    <select id="filterCategory">
+      <option value="">Alle categorieën</option>
+      <option value="Buiten">Buiten</option>
+      <option value="Thuis">Thuis</option>
+      <option value="Eten">Eten</option>
+      <option value="Avontuur">Avontuur</option>
+    </select>
+
+    <select id="filterBudget">
+      <option value="">Alle budgetten</option>
+      <option value="Gratis">Gratis</option>
+      <option value="Goedkoop">Goedkoop</option>
+      <option value="Gemiddeld">Gemiddeld</option>
+      <option value="Duur">Duur</option>
+    </select>
+
+    <button id="generateBtn">🎉 Kies random date</button>
+
+    <div id="randomCard" class="card-result hidden">
+      <h3 id="randomTitle"></h3>
+      <p id="randomDescription"></p>
     </div>
+  </div>
 
-    <!-- --- Random date generator --- -->
-    <div class="card">
-      <h2>🎲 Random date zoeken</h2>
+  <!-- 🔹 YOUR IDEAS -->
+  <div class="card">
 
-      <div class="filters">
-        <select id="filterCategory">
-          <option value="">Alle categorieën</option>
-          <option value="Buiten">Buiten</option>
-          <option value="Thuis">Thuis</option>
-          <option value="Eten">Eten</option>
-          <option value="Avontuur">Avontuur</option>
-        </select>
+    <h2 id="toggleIdeas" class="toggle-header">
+      Jouw ideeën <span id="arrow">▼</span>
+    </h2>
 
-        <select id="filterBudget">
-          <option value="">Alle budgetten</option>
-          <option value="Gratis">Gratis</option>
-          <option value="Goedkoop">Goedkoop</option>
-          <option value="Gemiddeld">Gemiddeld</option>
-          <option value="Duur">Duur</option>
-        </select>
-      </div>
-
-      <button id="generateBtn">🎉 Kies een random date</button>
-
-      <div id="randomCard" class="hidden card-result">
-        <h3 id="randomTitle"></h3>
-        <p id="randomDescription"></p>
-      </div>
-    </div>
-
-    <!-- --- Jouw ideeën (uitschuifbaar) --- -->
-    <div class="card">
-      <h2 class="toggle-header" id="toggleIdeas">Jouw ideeën ▼</h2>
-      <div id="ideasContent" class="collapsed">
-        <ul id="dateList"></ul>
-      </div>
+    <div id="ideasContent" class="collapsed">
+      <ul id="dateList"></ul>
     </div>
 
   </div>
 
-  <script src="script.js"></script>
+</div>
+
+<script src="script.js"></script>
 </body>
 </html>
