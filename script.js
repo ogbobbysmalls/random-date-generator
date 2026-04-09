@@ -15,20 +15,24 @@ const addBtnLabel      = document.getElementById("addBtnLabel");
 const cancelBtn        = document.getElementById("cancelBtn");
 const addTitleEl       = document.getElementById("addTitle");
 const list             = document.getElementById("dateList");
+const doneList         = document.getElementById("doneList");
 const toast            = document.getElementById("toast");
 const ideaCount        = document.getElementById("ideaCount");
+const doneCount        = document.getElementById("doneCount");
 const searchInput      = document.getElementById("searchInput");
 const loadingOverlay   = document.getElementById("loadingOverlay");
 const confirmModal     = document.getElementById("confirmModal");
 const confirmDeleteBtn = document.getElementById("confirmDelete");
 const cancelDeleteBtn  = document.getElementById("cancelDelete");
 const favOnlyCheck     = document.getElementById("favOnlyCheck");
+const hideDoneCheck    = document.getElementById("hideDoneCheck");
 const activeFiltersEl  = document.getElementById("activeFilters");
 
 let editId       = null;
 let deleteId     = null;
 let allIdeas     = [];
 let toastTimeout = null;
+let activeTab    = "ideas";
 
 // ===== LOADING =====
 function setLoading(on) {
@@ -72,26 +76,56 @@ function updateFilterLabel(labelId, values, defaultText) {
 
 // ===== WIRE UP MULTI-SELECT CHANGE EVENTS =====
 function setupMultiSelectListeners() {
-  // Ideas filter checkboxes
   document.querySelectorAll(".filt-cat, .filt-budget, .filt-loc, .filt-dur").forEach(cb => {
     cb.addEventListener("change", () => {
-      updateFilterLabel("filterCatLabel", getChecked("filt-cat"), "📂 Categorieën");
-      updateFilterLabel("filterBudgetLabel", getChecked("filt-budget"), "💸 Budget");
-      updateFilterLabel("filterLocLabel", getChecked("filt-loc"), "📍 Locatie");
-      updateFilterLabel("filterDurLabel", getChecked("filt-dur"), "⏱️ Tijdsduur");
+      const cats    = getChecked("filt-cat");
+      const budgets = getChecked("filt-budget");
+      const locs    = getChecked("filt-loc");
+      const durs    = getChecked("filt-dur");
+
+      updateFilterLabel("filterCatLabel",    cats,    "📂 Categorieën");
+      updateFilterLabel("filterBudgetLabel", budgets, "💸 Budget");
+      updateFilterLabel("filterLocLabel",    locs,    "📍 Locatie");
+      updateFilterLabel("filterDurLabel",    durs,    "⏱️ Tijdsduur");
+
+      // Update button active states
+      ["filterCatDrop","filterBudgetDrop","filterLocDrop","filterDurDrop"].forEach(dropId => {
+        const btn = document.querySelector("#" + dropId)?.closest(".multi-select-wrap")?.querySelector(".multi-select-btn");
+        if (btn) {
+          const hasVal = btn.querySelector("input:checked") !== null;
+          btn.classList.toggle("has-selection", hasVal);
+        }
+      });
+
       applyFilters();
     });
   });
 
-  // Random filter checkboxes
   document.querySelectorAll(".rand-cat, .rand-budget, .rand-loc, .rand-dur").forEach(cb => {
     cb.addEventListener("change", () => {
-      updateFilterLabel("randomFilterCategoryLabel", getChecked("rand-cat"), "📂 Alle categorieën");
-      updateFilterLabel("randomFilterBudgetLabel", getChecked("rand-budget"), "💸 Alle budgetten");
-      updateFilterLabel("randomFilterLocLabel", getChecked("rand-loc"), "📍 Alle locaties");
-      updateFilterLabel("randomFilterDurLabel", getChecked("rand-dur"), "⏱️ Alle tijdsduren");
+      const randCats    = getChecked("rand-cat");
+      const randBudgets = getChecked("rand-budget");
+      const randLocs    = getChecked("rand-loc");
+      const randDurs    = getChecked("rand-dur");
+
+      updateFilterLabel("randomFilterCategoryLabel", randCats,    "📂 Alle categorieën");
+      updateFilterLabel("randomFilterBudgetLabel",   randBudgets, "💸 Alle budgetten");
+      updateFilterLabel("randomFilterLocLabel",      randLocs,    "📍 Alle locaties");
+      updateFilterLabel("randomFilterDurLabel",      randDurs,    "⏱️ Alle tijdsduren");
+
+      ["randomFilterCategoryDrop","randomFilterBudgetDrop","randomFilterLocDrop","randomFilterDurDrop"].forEach(dropId => {
+        const btn = document.querySelector("#" + dropId)?.closest(".multi-select-wrap")?.querySelector(".multi-select-btn");
+        if (btn) {
+          const hasVal = btn.querySelector("input:checked") !== null;
+          btn.classList.toggle("has-selection", hasVal);
+        }
+      });
     });
   });
+
+  if (hideDoneCheck) {
+    hideDoneCheck.addEventListener("change", applyFilters);
+  }
 }
 
 // ===== TOGGLE PANELS =====
@@ -106,6 +140,18 @@ function setupToggle(toggleId, boxId, chevronId) {
 
 setupToggle("toggleAdd",    "addBox",    "chevronAdd");
 setupToggle("toggleIdeas",  "ideasBox",  "chevronIdeas");
+
+// ===== TAB SWITCHING =====
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll(".tab-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.tab === tab);
+  });
+  document.getElementById("tab-ideas").classList.toggle("hidden", tab !== "ideas");
+  document.getElementById("tab-done").classList.toggle("hidden", tab !== "done");
+
+  if (tab === "done") renderDoneList();
+}
 
 // ===== CANCEL EDIT =====
 cancelBtn.onclick = () => resetForm();
@@ -140,29 +186,37 @@ async function renderList() {
   }
 
   allIdeas = data || [];
-  ideaCount.innerText = allIdeas.length;
+
+  const doneItems = allIdeas.filter(i => i.done);
+  if (doneCount) doneCount.innerText = doneItems.length;
+
   applyFilters();
+  if (activeTab === "done") renderDoneList();
 }
 
 // ===== APPLY FILTERS =====
 function applyFilters() {
-  const search      = searchInput.value.toLowerCase();
-  const cats        = getChecked("filt-cat");
-  const budgets     = getChecked("filt-budget");
-  const locations   = getChecked("filt-loc");
-  const durations   = getChecked("filt-dur");
+  const search    = searchInput.value.toLowerCase();
+  const cats      = getChecked("filt-cat");
+  const budgets   = getChecked("filt-budget");
+  const locations = getChecked("filt-loc");
+  const durations = getChecked("filt-dur");
 
   const filtered = allIdeas.filter(idea => {
-    const matchSearch   = !search    || idea.title?.toLowerCase().includes(search) || idea.description?.toLowerCase().includes(search);
-    const matchCat      = !cats.length    || cats.includes(idea.category);
-    const matchBudget   = !budgets.length || budgets.includes(idea.budget);
-    const matchLoc      = !locations.length || locations.includes(idea.location);
-    const matchDur      = !durations.length || durations.includes(idea.duration);
+    if (idea.done) return false;
+    const matchSearch = !search       || idea.title?.toLowerCase().includes(search) || idea.description?.toLowerCase().includes(search);
+    const matchCat    = !cats.length     || cats.includes(idea.category);
+    const matchBudget = !budgets.length  || budgets.includes(idea.budget);
+    const matchLoc    = !locations.length || locations.includes(idea.location);
+    const matchDur    = !durations.length || durations.includes(idea.duration);
     return matchSearch && matchCat && matchBudget && matchLoc && matchDur;
   });
 
   renderActiveFilterChips(cats, budgets, locations, durations);
   renderItems(filtered);
+
+  // FIX: show filtered count, not total
+  ideaCount.innerText = filtered.length;
 }
 
 // ===== ACTIVE FILTER CHIPS =====
@@ -190,13 +244,7 @@ function renderActiveFilterChips(cats, budgets, locations, durations) {
 
 function removeFilter(className, value) {
   const cb = document.querySelector(`.${className}[value="${value}"]`);
-  if (cb) { cb.checked = false; }
-
-  updateFilterLabel("filterCatLabel", getChecked("filt-cat"), "📂 Categorieën");
-  updateFilterLabel("filterBudgetLabel", getChecked("filt-budget"), "💸 Budget");
-  updateFilterLabel("filterLocLabel", getChecked("filt-loc"), "📍 Locatie");
-  updateFilterLabel("filterDurLabel", getChecked("filt-dur"), "⏱️ Tijdsduur");
-  applyFilters();
+  if (cb) { cb.checked = false; cb.dispatchEvent(new Event("change")); }
 }
 
 searchInput.addEventListener("input", applyFilters);
@@ -214,108 +262,145 @@ function renderItems(ideas) {
     return;
   }
 
-  ideas.forEach((idea) => {
-    const li = document.createElement("li");
-    li.className  = "date-item";
-    li.dataset.id = idea.id;
+  ideas.forEach(idea => list.appendChild(buildIdeaItem(idea, false)));
+}
 
-    li.innerHTML = `
-      <div class="item-content">
-        <strong>${idea.title} ${idea.favorite ? "⭐" : ""}</strong>
-        <small>${idea.description || ""}</small>
-        <div class="item-badges">
-          ${idea.category ? `<span class="badge badge-cat">${categoryEmoji(idea.category)} ${idea.category}</span>` : ""}
-          ${idea.budget   ? `<span class="badge badge-budget">${budgetEmoji(idea.budget)} ${idea.budget}</span>` : ""}
-          ${idea.location ? `<span class="badge badge-loc">📍 ${idea.location}</span>` : ""}
-          ${idea.duration ? `<span class="badge badge-dur">⏱️ ${idea.duration}</span>` : ""}
-        </div>
+// ===== RENDER DONE LIST =====
+function renderDoneList() {
+  if (!doneList) return;
+  doneList.innerHTML = "";
+  const done = allIdeas.filter(i => i.done);
+
+  if (doneCount) doneCount.innerText = done.length;
+
+  if (!done.length) {
+    doneList.innerHTML = `
+      <div class="empty-state">
+        <span class="empty-icon">🎯</span>
+        <p>Nog niets gedaan — ga een date plannen! 💖</p>
+      </div>`;
+    return;
+  }
+
+  done.forEach(idea => doneList.appendChild(buildIdeaItem(idea, true)));
+}
+
+// ===== BUILD IDEA ITEM =====
+function buildIdeaItem(idea, isDoneTab) {
+  const li = document.createElement("li");
+  li.className  = "date-item" + (isDoneTab ? " done-item" : "");
+  li.dataset.id = idea.id;
+
+  li.innerHTML = `
+    <div class="item-content">
+      <strong>${idea.title} ${idea.favorite ? "⭐" : ""}</strong>
+      <small>${idea.description || ""}</small>
+      <div class="item-badges">
+        ${isDoneTab ? `<span class="done-badge">✅ Gedaan</span>` : ""}
+        ${idea.category ? `<span class="badge badge-cat">${categoryEmoji(idea.category)} ${idea.category}</span>` : ""}
+        ${idea.budget   ? `<span class="badge badge-budget">${budgetEmoji(idea.budget)} ${idea.budget}</span>` : ""}
+        ${idea.location ? `<span class="badge badge-loc">📍 ${idea.location}</span>` : ""}
+        ${idea.duration ? `<span class="badge badge-dur">⏱️ ${idea.duration}</span>` : ""}
       </div>
-    `;
+    </div>
+  `;
 
-    const actions = document.createElement("div");
-    actions.className = "actions";
+  const actions = document.createElement("div");
+  actions.className = "actions";
 
-    // ⭐ Favorite — FIX: update allIdeas locally to avoid stale state
-    const fav = document.createElement("button");
-    fav.className = "iconBtn";
-    fav.title     = idea.favorite ? "Verwijder favoriet" : "Markeer als favoriet";
-    fav.innerText = idea.favorite ? "💖" : "🤍";
-    fav.onclick   = async () => {
-      const newVal = !idea.favorite;
+  // ⭐ Favorite
+  const fav = document.createElement("button");
+  fav.className = "iconBtn" + (idea.favorite ? " is-fav" : "");
+  fav.title     = idea.favorite ? "Verwijder favoriet" : "Markeer als favoriet";
+  fav.innerText = idea.favorite ? "💖" : "🤍";
+  fav.onclick   = async () => {
+    const newVal = !idea.favorite;
+    const { error } = await supabaseClient.from("date_ideas").update({ favorite: newVal }).eq("id", idea.id);
+    if (error) { showToast("❌ Fout bij opslaan"); return; }
 
-      const { error } = await supabaseClient
-        .from("date_ideas")
-        .update({ favorite: newVal })
-        .eq("id", idea.id);
+    idea.favorite = newVal;
+    const idx = allIdeas.findIndex(i => i.id === idea.id);
+    if (idx !== -1) allIdeas[idx].favorite = newVal;
 
-      if (error) {
-        showToast("❌ Fout bij opslaan");
-        return;
-      }
+    fav.innerText = newVal ? "💖" : "🤍";
+    fav.title     = newVal ? "Verwijder favoriet" : "Markeer als favoriet";
+    fav.classList.toggle("is-fav", newVal);
 
-      // Update local state immediately (fixes the bug)
-      idea.favorite = newVal;
-      const idx = allIdeas.findIndex(i => i.id === idea.id);
-      if (idx !== -1) allIdeas[idx].favorite = newVal;
+    const titleEl = li.querySelector("strong");
+    if (titleEl) titleEl.innerText = `${idea.title} ${newVal ? "⭐" : ""}`;
 
-      fav.innerText = newVal ? "💖" : "🤍";
-      fav.title     = newVal ? "Verwijder favoriet" : "Markeer als favoriet";
-      const titleEl = li.querySelector("strong");
-      if (titleEl) titleEl.innerText = `${idea.title} ${newVal ? "⭐" : ""}`;
+    showToast(newVal ? "Favoriet toegevoegd ⭐" : "Favoriet verwijderd");
+  };
 
-      showToast(newVal ? "Favoriet toegevoegd ⭐" : "Favoriet verwijderd");
-    };
+  // ✅ Done toggle
+  const done = document.createElement("button");
+  done.className = "iconBtn" + (idea.done ? " is-done" : "");
+  done.title     = idea.done ? "Markeer als nog te doen" : "Markeer als gedaan";
+  done.innerText = idea.done ? "✅" : "☑️";
+  done.onclick   = async () => {
+    const newVal = !idea.done;
+    const { error } = await supabaseClient.from("date_ideas").update({ done: newVal }).eq("id", idea.id);
+    if (error) { showToast("❌ Fout bij opslaan"); return; }
 
-    // ✏️ Edit
-    const edit = document.createElement("button");
-    edit.className = "iconBtn";
-    edit.title     = "Bewerken";
-    edit.innerText = "✏️";
-    edit.onclick   = () => {
-      titleInput.value    = idea.title;
-      descInput.value     = idea.description;
-      categoryInput.value = idea.category;
-      budgetInput.value   = idea.budget;
-      locationInput.value = idea.location || "";
-      durationInput.value = idea.duration || "";
-      editId              = idea.id;
-      addBtnLabel.innerText = "💾 Bijwerken";
-      addTitleEl.innerText  = "Idee bewerken";
+    idea.done = newVal;
+    const idx = allIdeas.findIndex(i => i.id === idea.id);
+    if (idx !== -1) allIdeas[idx].done = newVal;
 
-      const addBox   = document.getElementById("addBox");
-      const chevron  = document.getElementById("chevronAdd");
-      if (!addBox.classList.contains("open")) {
-        addBox.classList.add("open");
-        chevron.classList.add("open");
-      }
+    showToast(newVal ? "Gemarkeerd als gedaan ✅" : "Terug gezet naar ideeën 💭");
 
-      document.getElementById("addSection").scrollIntoView({ behavior: "smooth", block: "start" });
-      showToast("Bewerkmodus ✏️");
-    };
+    li.classList.add("removing");
+    setTimeout(() => renderList(), 300);
+  };
 
-    // 🗑 Delete
-    const del = document.createElement("button");
-    del.className = "iconBtn";
-    del.title     = "Verwijderen";
-    del.innerText = "🗑️";
-    del.onclick   = () => {
-      deleteId = idea.id;
-      confirmModal.classList.remove("hidden");
-    };
+  // ✏️ Edit
+  const edit = document.createElement("button");
+  edit.className = "iconBtn";
+  edit.title     = "Bewerken";
+  edit.innerText = "✏️";
+  edit.onclick   = () => {
+    titleInput.value    = idea.title;
+    descInput.value     = idea.description;
+    categoryInput.value = idea.category;
+    budgetInput.value   = idea.budget;
+    locationInput.value = idea.location || "";
+    durationInput.value = idea.duration || "";
+    editId              = idea.id;
+    addBtnLabel.innerText = "💾 Bijwerken";
+    addTitleEl.innerText  = "Idee bewerken";
 
-    actions.appendChild(fav);
-    actions.appendChild(edit);
-    actions.appendChild(del);
-    li.appendChild(actions);
-    list.appendChild(li);
-  });
+    const addBox  = document.getElementById("addBox");
+    const chevron = document.getElementById("chevronAdd");
+    if (!addBox.classList.contains("open")) {
+      addBox.classList.add("open");
+      chevron.classList.add("open");
+    }
+    document.getElementById("addSection").scrollIntoView({ behavior: "smooth", block: "start" });
+    showToast("Bewerkmodus ✏️");
+  };
+
+  // 🗑 Delete
+  const del = document.createElement("button");
+  del.className = "iconBtn";
+  del.title     = "Verwijderen";
+  del.innerText = "🗑️";
+  del.onclick   = () => {
+    deleteId = idea.id;
+    confirmModal.classList.remove("hidden");
+  };
+
+  actions.appendChild(fav);
+  actions.appendChild(done);
+  actions.appendChild(edit);
+  actions.appendChild(del);
+  li.appendChild(actions);
+  return li;
 }
 
 // ===== DELETE MODAL =====
 confirmDeleteBtn.onclick = async () => {
   if (!deleteId) return;
 
-  const item = list.querySelector(`[data-id="${deleteId}"]`);
+  const item = document.querySelector(`[data-id="${deleteId}"]`);
   if (item) {
     item.classList.add("removing");
     await new Promise(r => setTimeout(r, 280));
@@ -381,19 +466,19 @@ addBtn.onclick = async () => {
 
 // ===== RANDOM =====
 document.getElementById("generateBtn").onclick = async () => {
-  const favOnly    = favOnlyCheck.checked;
-  const randCats   = getChecked("rand-cat");
+  const favOnly     = favOnlyCheck.checked;
+  const randCats    = getChecked("rand-cat");
   const randBudgets = getChecked("rand-budget");
-  const randLocs   = getChecked("rand-loc");
-  const randDurs   = getChecked("rand-dur");
+  const randLocs    = getChecked("rand-loc");
+  const randDurs    = getChecked("rand-dur");
 
-  let pool = allIdeas;
+  let pool = allIdeas.filter(i => !i.done);
 
-  if (favOnly)           pool = pool.filter(i => i.favorite);
-  if (randCats.length)   pool = pool.filter(i => randCats.includes(i.category));
+  if (favOnly)            pool = pool.filter(i => i.favorite);
+  if (randCats.length)    pool = pool.filter(i => randCats.includes(i.category));
   if (randBudgets.length) pool = pool.filter(i => randBudgets.includes(i.budget));
-  if (randLocs.length)   pool = pool.filter(i => randLocs.includes(i.location));
-  if (randDurs.length)   pool = pool.filter(i => randDurs.includes(i.duration));
+  if (randLocs.length)    pool = pool.filter(i => randLocs.includes(i.location));
+  if (randDurs.length)    pool = pool.filter(i => randDurs.includes(i.duration));
 
   if (!allIdeas.length) {
     showToast("Nog geen ideeën! Voeg er eerst wat toe 💭");
@@ -407,13 +492,13 @@ document.getElementById("generateBtn").onclick = async () => {
 
   const rand = pool[Math.floor(Math.random() * pool.length)];
 
-  document.getElementById("randomTitle").innerText = rand.title;
+  document.getElementById("randomTitle").innerText       = rand.title;
   document.getElementById("randomDescription").innerText = rand.description || "";
 
-  const catEl  = document.getElementById("randomCategory");
-  const budEl  = document.getElementById("randomBudget");
-  const locEl  = document.getElementById("randomLocation");
-  const durEl  = document.getElementById("randomDuration");
+  const catEl = document.getElementById("randomCategory");
+  const budEl = document.getElementById("randomBudget");
+  const locEl = document.getElementById("randomLocation");
+  const durEl = document.getElementById("randomDuration");
 
   catEl.innerText = rand.category ? `${categoryEmoji(rand.category)} ${rand.category}` : "";
   budEl.innerText = rand.budget   ? `${budgetEmoji(rand.budget)} ${rand.budget}`       : "";
