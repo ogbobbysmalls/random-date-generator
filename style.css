@@ -63,7 +63,7 @@ input, select {
 ===================== */
 button {
   padding: 10px;
-  background: #ff4d8d;
+  background: linear-gradient(135deg, #ff4d8d, #ff2f7a);
   color: white;
   border: none;
   border-radius: 10px;
@@ -75,7 +75,7 @@ button {
 }
 
 button:hover {
-  background: #ff2f7a;
+  transform: translateY(-2px);
 }
 
 /* =====================
