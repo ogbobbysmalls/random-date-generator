@@ -1,12 +1,14 @@
-console.log("Script loaded");
-
-// --- Supabase setup ---
+// =====================
+// SUPABASE SETUP
+// =====================
 const SUPABASE_URL = "https://aavzsvurygojkoxxvssd.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_At0pbd5rRAbdWUF6gL0Kgw_O0QPSx0-";
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// --- Elements ---
+// =====================
+// ELEMENTS
+// =====================
 const titleInput = document.getElementById("title");
 const descInput = document.getElementById("description");
 const categoryInput = document.getElementById("category");
@@ -23,33 +25,48 @@ const randomDescription = document.getElementById("randomDescription");
 const filterCategory = document.getElementById("filterCategory");
 const filterBudget = document.getElementById("filterBudget");
 
-const toggleHeader = document.getElementById("toggleIdeas");
+// toggle
+const toggleIdeas = document.getElementById("toggleIdeas");
 const ideasContent = document.getElementById("ideasContent");
+const arrow = document.getElementById("arrow");
 
-// --- Toggle jouw ideeën ---
-toggleHeader.addEventListener("click", () => {
-  if (ideasContent.classList.contains("collapsed")) {
+let open = false;
+
+// =====================
+// TOGGLE IDEAS (FIXED)
+// =====================
+toggleIdeas.addEventListener("click", () => {
+  open = !open;
+
+  if (open) {
     ideasContent.classList.remove("collapsed");
-    toggleHeader.textContent = "Jouw ideeën ▲";
+    ideasContent.classList.add("expanded");
+    arrow.innerText = "▲";
   } else {
     ideasContent.classList.add("collapsed");
-    toggleHeader.textContent = "Jouw ideeën ▼";
+    ideasContent.classList.remove("expanded");
+    arrow.innerText = "▼";
   }
 });
 
-// --- Fetch ---
+// =====================
+// FETCH IDEAS
+// =====================
 async function fetchIdeas() {
-  const { data, error } = await supabaseClient
+  const { data } = await supabaseClient
     .from("date_ideas")
     .select("*")
     .order("id", { ascending: false });
-  if (error) console.log(error);
+
   return data || [];
 }
 
-// --- Render list ---
+// =====================
+// RENDER LIST
+// =====================
 async function renderList() {
   const ideas = await fetchIdeas();
+
   dateList.innerHTML = "";
 
   ideas.forEach((idea) => {
@@ -59,25 +76,29 @@ async function renderList() {
     const li = document.createElement("li");
     li.className = "date-item";
 
-    li.innerHTML = `<span>${idea.title} (${idea.category || "-"}, ${idea.budget || "-"})</span>`;
+    li.innerHTML = `
+      <span>${idea.title} (${idea.category || "-"}, ${idea.budget || "-"})</span>
+    `;
 
-    const delBtn = document.createElement("button");
-    delBtn.innerText = "X";
+    const del = document.createElement("button");
+    del.innerText = "🗑";
 
-    delBtn.onclick = async () => {
+    del.onclick = async () => {
       await supabaseClient.from("date_ideas").delete().eq("id", idea.id);
       renderList();
     };
 
-    li.appendChild(delBtn);
+    li.appendChild(del);
     dateList.appendChild(li);
   });
 }
 
-// --- Add ---
+// =====================
+// ADD IDEA
+// =====================
 addBtn.addEventListener("click", async () => {
   if (!titleInput.value || !descInput.value) {
-    alert("Vul titel en beschrijving in");
+    alert("Vul alles in!");
     return;
   }
 
@@ -91,8 +112,8 @@ addBtn.addEventListener("click", async () => {
   ]);
 
   if (error) {
-    console.log(error);
     alert("Error bij opslaan");
+    console.log(error);
     return;
   }
 
@@ -104,13 +125,19 @@ addBtn.addEventListener("click", async () => {
   renderList();
 });
 
-// --- Random ---
+// =====================
+// RANDOM DATE
+// =====================
 generateBtn.addEventListener("click", async () => {
   const ideas = await fetchIdeas();
+
   let filtered = ideas;
 
-  if (filterCategory.value) filtered = filtered.filter(i => i.category === filterCategory.value);
-  if (filterBudget.value) filtered = filtered.filter(i => i.budget === filterBudget.value);
+  if (filterCategory.value)
+    filtered = filtered.filter(i => i.category === filterCategory.value);
+
+  if (filterBudget.value)
+    filtered = filtered.filter(i => i.budget === filterBudget.value);
 
   if (!filtered.length) {
     alert("Geen ideeën gevonden!");
@@ -121,12 +148,17 @@ generateBtn.addEventListener("click", async () => {
 
   randomTitle.innerText = rand.title;
   randomDescription.innerText = rand.description;
+
   randomCard.classList.remove("hidden");
 });
 
-// --- Filters ---
+// =====================
+// FILTERS
+// =====================
 filterCategory.addEventListener("change", renderList);
 filterBudget.addEventListener("change", renderList);
 
-// --- Start ---
+// =====================
+// START
+// =====================
 renderList();
