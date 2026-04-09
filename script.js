@@ -19,6 +19,18 @@ const randomCard = document.getElementById("randomCard");
 const toast = document.getElementById("toast");
 const list = document.getElementById("dateList");
 
+// TOGGLES
+const addBox = document.getElementById("addBox");
+const ideasBox = document.getElementById("ideasBox");
+
+document.getElementById("toggleAdd").onclick = () => {
+  addBox.classList.toggle("open");
+};
+
+document.getElementById("toggleIdeas").onclick = () => {
+  ideasBox.classList.toggle("open");
+};
+
 // toast
 function showToast(msg) {
   toast.innerText = msg;
@@ -47,7 +59,7 @@ addBtn.addEventListener("click", async () => {
   showToast("💖 Toegevoegd!");
 });
 
-// random (Apple feel animation)
+// random
 generateBtn.addEventListener("click", async () => {
   const ideas = await fetchIdeas();
 
