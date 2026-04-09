@@ -15,9 +15,10 @@
 
   <div class="container">
 
-    <h1>💖 Random Date Generator</h1>
+    <h1>💖</h1>
 
-    <div class="add-box">
+    <!-- --- Voeg een date idee toe --- -->
+    <div class="card">
       <h2>Voeg een date idee toe</h2>
 
       <input id="title" placeholder="Titel" />
@@ -42,35 +43,43 @@
       <button id="addBtn">Voeg toe</button>
     </div>
 
-    <div class="filters">
-      <h2>Filters</h2>
+    <!-- --- Random date generator --- -->
+    <div class="card">
+      <h2>🎲 Random date zoeken</h2>
 
-      <select id="filterCategory">
-        <option value="">Alle categorieën</option>
-        <option value="Buiten">Buiten</option>
-        <option value="Thuis">Thuis</option>
-        <option value="Eten">Eten</option>
-        <option value="Avontuur">Avontuur</option>
-      </select>
+      <div class="filters">
+        <select id="filterCategory">
+          <option value="">Alle categorieën</option>
+          <option value="Buiten">Buiten</option>
+          <option value="Thuis">Thuis</option>
+          <option value="Eten">Eten</option>
+          <option value="Avontuur">Avontuur</option>
+        </select>
 
-      <select id="filterBudget">
-        <option value="">Alle budgetten</option>
-        <option value="Gratis">Gratis</option>
-        <option value="Goedkoop">Goedkoop</option>
-        <option value="Gemiddeld">Gemiddeld</option>
-        <option value="Duur">Duur</option>
-      </select>
+        <select id="filterBudget">
+          <option value="">Alle budgetten</option>
+          <option value="Gratis">Gratis</option>
+          <option value="Goedkoop">Goedkoop</option>
+          <option value="Gemiddeld">Gemiddeld</option>
+          <option value="Duur">Duur</option>
+        </select>
+      </div>
+
+      <button id="generateBtn">🎉 Kies een random date</button>
+
+      <div id="randomCard" class="hidden card-result">
+        <h3 id="randomTitle"></h3>
+        <p id="randomDescription"></p>
+      </div>
     </div>
 
-    <button id="generateBtn">🎲 Random Date</button>
-
-    <div id="randomCard" class="hidden">
-      <h2 id="randomTitle"></h2>
-      <p id="randomDescription"></p>
+    <!-- --- Jouw ideeën (uitschuifbaar) --- -->
+    <div class="card">
+      <h2 class="toggle-header" id="toggleIdeas">Jouw ideeën ▼</h2>
+      <div id="ideasContent" class="collapsed">
+        <ul id="dateList"></ul>
+      </div>
     </div>
-
-    <h2>Jouw ideeën</h2>
-    <ul id="dateList"></ul>
 
   </div>
 
