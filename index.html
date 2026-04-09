@@ -3,78 +3,147 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-
   <title>C💖B Date Grabbelton</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c&display=swap" rel="stylesheet">
-
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Pacifico&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css"/>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-
 <body>
 
 <div class="container">
 
-  <h1>C💖B Date Grabbelton</h1>
+  <header>
+    <h1>C<span class="heart">💖</span>B</h1>
+    <p class="subtitle">Date Grabbelton</p>
+  </header>
 
   <!-- RANDOM -->
-  <div class="card glass">
-    <h2>🎲 Random date</h2>
+  <div class="card" id="randomSection">
+    <div class="card-header">
+      <span class="card-icon">🎲</span>
+      <h2>Verras me</h2>
+    </div>
 
-    <button class="primaryBtn" id="generateBtn">✨ Verras me</button>
+    <div class="random-options">
+      <label class="toggle-pill">
+        <input type="checkbox" id="favOnlyCheck"/>
+        <span>⭐ Alleen favorieten</span>
+      </label>
+    </div>
+
+    <button class="primaryBtn shake-btn" id="generateBtn">
+      <span class="btn-icon">✨</span> Kies een date!
+    </button>
 
     <div id="randomCard" class="resultCard hidden">
-      <div id="randomTitle" class="resultTitle"></div>
-      <div id="randomDescription" class="resultDesc"></div>
+      <div class="result-inner">
+        <div id="randomTitle" class="resultTitle"></div>
+        <div id="randomDescription" class="resultDesc"></div>
+        <div class="result-meta">
+          <span id="randomCategory" class="badge badge-cat"></span>
+          <span id="randomBudget" class="badge badge-budget"></span>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- ADD -->
-  <div class="card glass">
-    <div class="toggle" id="toggleAdd">
-      <h2>➕ Voeg date toe</h2>
-      <span>▼</span>
+  <!-- ADD / EDIT -->
+  <div class="card" id="addSection">
+    <div class="toggle card-header" id="toggleAdd">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="card-icon">➕</span>
+        <h2 id="addTitle">Voeg date toe</h2>
+      </div>
+      <span class="chevron" id="chevronAdd">▼</span>
     </div>
 
     <div id="addBox" class="collapsible">
-      <input id="title" placeholder="Titel"/>
-      <input id="description" placeholder="Beschrijving"/>
+      <div class="form-inner">
+        <input id="title" placeholder="Titel bijv. Sterren kijken 🌙"/>
+        <input id="description" placeholder="Beschrijving..."/>
 
-      <select id="category">
-        <option value="">Categorie</option>
-        <option value="Buiten">Buiten</option>
-        <option value="Thuis">Thuis</option>
-        <option value="Eten">Eten</option>
-        <option value="Avontuur">Avontuur</option>
-      </select>
+        <div class="row-inputs">
+          <select id="category">
+            <option value="">📂 Categorie</option>
+            <option value="Buiten">🌿 Buiten</option>
+            <option value="Thuis">🏠 Thuis</option>
+            <option value="Eten">🍽️ Eten</option>
+            <option value="Avontuur">⚡ Avontuur</option>
+          </select>
 
-      <select id="budget">
-        <option value="">Budget</option>
-        <option value="Gratis">Gratis</option>
-        <option value="Goedkoop">Goedkoop</option>
-        <option value="Gemiddeld">Gemiddeld</option>
-        <option value="Duur">Duur</option>
-      </select>
+          <select id="budget">
+            <option value="">💸 Budget</option>
+            <option value="Gratis">🆓 Gratis</option>
+            <option value="Goedkoop">💚 Goedkoop</option>
+            <option value="Gemiddeld">💛 Gemiddeld</option>
+            <option value="Duur">❤️ Duur</option>
+          </select>
+        </div>
 
-      <button class="primaryBtn" id="addBtn">Opslaan</button>
+        <div class="form-actions">
+          <button class="secondaryBtn" id="cancelBtn">Annuleer</button>
+          <button class="primaryBtn" id="addBtn">
+            <span id="addBtnLabel">💾 Opslaan</span>
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- IDEAS -->
-  <div class="card glass">
-    <div class="toggle" id="toggleIdeas">
-      <h2>💖 Jouw ideeën</h2>
-      <span>▼</span>
+  <!-- FILTER + IDEAS -->
+  <div class="card" id="ideasSection">
+    <div class="toggle card-header" id="toggleIdeas">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="card-icon">💖</span>
+        <h2>Jouw ideeën <span class="count-badge" id="ideaCount">0</span></h2>
+      </div>
+      <span class="chevron" id="chevronIdeas">▼</span>
     </div>
 
     <div id="ideasBox" class="collapsible">
+      <div class="filter-bar">
+        <input id="searchInput" placeholder="🔍 Zoeken..." class="search-input"/>
+        <select id="filterCategory" class="filter-select">
+          <option value="">Alle categorieën</option>
+          <option value="Buiten">🌿 Buiten</option>
+          <option value="Thuis">🏠 Thuis</option>
+          <option value="Eten">🍽️ Eten</option>
+          <option value="Avontuur">⚡ Avontuur</option>
+        </select>
+        <select id="filterBudget" class="filter-select">
+          <option value="">Alle budgetten</option>
+          <option value="Gratis">🆓 Gratis</option>
+          <option value="Goedkoop">💚 Goedkoop</option>
+          <option value="Gemiddeld">💛 Gemiddeld</option>
+          <option value="Duur">❤️ Duur</option>
+        </select>
+      </div>
+
       <ul id="dateList"></ul>
     </div>
   </div>
 
+</div>
+
+<!-- LOADING OVERLAY -->
+<div id="loadingOverlay" class="loading-overlay hidden">
+  <div class="spinner"></div>
+</div>
+
+<!-- DELETE CONFIRM MODAL -->
+<div id="confirmModal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <div class="modal-icon">🗑️</div>
+    <p>Weet je zeker dat je dit idee wil verwijderen?</p>
+    <div class="modal-actions">
+      <button class="secondaryBtn" id="cancelDelete">Nee, bewaar</button>
+      <button class="primaryBtn danger" id="confirmDelete">Ja, verwijder</button>
+    </div>
+  </div>
 </div>
 
 <div id="toast"></div>
