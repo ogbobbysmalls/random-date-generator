@@ -1,72 +1,79 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>💖</title>
-<link rel="stylesheet" href="style.css">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="script.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Random Date Generator</title>
+
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Supabase library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
+
 <body>
 
-<div class="container">
-<h1>💖</h1>
+  <div class="container">
 
-<section class="add-date">
-<h2>Voeg een date-idee toe</h2>
-<input id="title" placeholder="Titel">
-<input id="description" placeholder="Beschrijving">
-<select id="category">
-<option value="">Categorie</option>
-<option value="Buiten">Buiten</option>
-<option value="Thuis">Thuis</option>
-<option value="Eten">Eten</option>
-<option value="Avontuur">Avontuur</option>
-</select>
-<select id="budget">
-<option value="">Budget</option>
-<option value="Gratis">Gratis</option>
-<option value="Goedkoop">Goedkoop</option>
-<option value="Gemiddeld">Gemiddeld</option>
-<option value="Duur">Duur</option>
-</select>
-<button id="addBtn">Voeg toe</button>
-</section>
+    <h1>💖 Random Date Generator</h1>
 
-<section class="filters">
-<h2>Filters</h2>
-<select id="filterCategory">
-<option value="">Alle categorieën</option>
-<option value="Buiten">Buiten</option>
-<option value="Thuis">Thuis</option>
-<option value="Eten">Eten</option>
-<option value="Avontuur">Avontuur</option>
-</select>
-<select id="filterBudget">
-<option value="">Alle budgetten</option>
-<option value="Gratis">Gratis</option>
-<option value="Goedkoop">Goedkoop</option>
-<option value="Gemiddeld">Gemiddeld</option>
-<option value="Duur">Duur</option>
-</select>
-</section>
+    <div class="add-box">
+      <h2>Voeg een date idee toe</h2>
 
-<section class="random">
-<button id="generateBtn">🎲 Kies een willekeurige date</button>
-<div id="randomCard" class="hidden">
-<h2 id="randomTitle"></h2>
-<p id="randomDescription"></p>
-</div>
-</section>
+      <input id="title" placeholder="Titel" />
+      <input id="description" placeholder="Beschrijving" />
 
-<section class="date-list">
-<h2>Jouw date-ideeën</h2>
-<ul id="dateList"></ul>
-</section>
+      <select id="category">
+        <option value="">Categorie</option>
+        <option value="Buiten">Buiten</option>
+        <option value="Thuis">Thuis</option>
+        <option value="Eten">Eten</option>
+        <option value="Avontuur">Avontuur</option>
+      </select>
 
-<script src="script.js"></script>
-</div>
+      <select id="budget">
+        <option value="">Budget</option>
+        <option value="Gratis">Gratis</option>
+        <option value="Goedkoop">Goedkoop</option>
+        <option value="Gemiddeld">Gemiddeld</option>
+        <option value="Duur">Duur</option>
+      </select>
+
+      <button id="addBtn">Voeg toe</button>
+    </div>
+
+    <div class="filters">
+      <h2>Filters</h2>
+
+      <select id="filterCategory">
+        <option value="">Alle categorieën</option>
+        <option value="Buiten">Buiten</option>
+        <option value="Thuis">Thuis</option>
+        <option value="Eten">Eten</option>
+        <option value="Avontuur">Avontuur</option>
+      </select>
+
+      <select id="filterBudget">
+        <option value="">Alle budgetten</option>
+        <option value="Gratis">Gratis</option>
+        <option value="Goedkoop">Goedkoop</option>
+        <option value="Gemiddeld">Gemiddeld</option>
+        <option value="Duur">Duur</option>
+      </select>
+    </div>
+
+    <button id="generateBtn">🎲 Random Date</button>
+
+    <div id="randomCard" class="hidden">
+      <h2 id="randomTitle"></h2>
+      <p id="randomDescription"></p>
+    </div>
+
+    <h2>Jouw ideeën</h2>
+    <ul id="dateList"></ul>
+
+  </div>
+
+  <script src="script.js"></script>
 </body>
 </html>
