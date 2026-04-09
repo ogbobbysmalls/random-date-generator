@@ -248,7 +248,19 @@ input::placeholder {
   animation: shake 0.5s ease;
 }
 
-/* ===== RANDOM OPTIONS ===== */
+/* ===== RANDOM FILTERS ===== */
+.random-filters {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.random-filters .filter-select {
+  flex: 1;
+  min-width: 130px;
+  margin: 0;
+}
 .random-options {
   margin-top: 14px;
 }
