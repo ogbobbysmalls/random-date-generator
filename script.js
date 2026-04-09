@@ -38,13 +38,25 @@ function showToast(msg) {
   setTimeout(() => toast.classList.remove("show"), 2000);
 }
 
-// fetch
-async function fetchIdeas() {
+// fetch + render
+async function renderList() {
   const { data } = await supabaseClient.from("date_ideas").select("*");
-  return data || [];
+
+  list.innerHTML = "";
+
+  if (!data || data.length === 0) {
+    list.innerHTML = "<p>Geen ideeën 💭</p>";
+    return;
+  }
+
+  data.forEach((idea) => {
+    const li = document.createElement("li");
+    li.className = "date-item";
+    li.innerHTML = `<span>${idea.title}</span>`;
+    list.appendChild(li);
+  });
 }
 
-// add
 addBtn.addEventListener("click", async () => {
   await supabaseClient.from("date_ideas").insert([{
     title: titleInput.value,
@@ -57,19 +69,19 @@ addBtn.addEventListener("click", async () => {
   descInput.value = "";
 
   showToast("💖 Toegevoegd!");
+
+  renderList();
 });
 
-// random
 generateBtn.addEventListener("click", async () => {
-  const ideas = await fetchIdeas();
+  const { data } = await supabaseClient.from("date_ideas").select("*");
 
-  randomTitle.innerText = "Denk... 🤔";
-  randomDescription.innerText = "";
+  const rand = data[Math.floor(Math.random() * data.length)];
+
+  randomTitle.innerText = rand.title;
+  randomDescription.innerText = rand.description;
+
   randomCard.classList.remove("hidden");
-
-  setTimeout(() => {
-    const rand = ideas[Math.floor(Math.random() * ideas.length)];
-    randomTitle.innerText = rand.title;
-    randomDescription.innerText = rand.description;
-  }, 600);
 });
+
+renderList();
