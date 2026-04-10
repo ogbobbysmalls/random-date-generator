@@ -302,6 +302,26 @@
 
 <div id="toast"></div>
 
+<!-- PASSWORD MODAL -->
+<div id="pwModal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <div class="modal-icon">🔒</div>
+    <p id="pwLabel">Voer het wachtwoord in</p>
+    <input
+      id="pwInput"
+      type="password"
+      placeholder="Wachtwoord..."
+      autocomplete="current-password"
+      style="width:100%;padding:10px 14px;border-radius:12px;border:2px solid #e8a0b0;font-size:1rem;font-family:inherit;margin-top:4px;outline:none;"
+    />
+    <p id="pwError" class="hidden" style="color:#c0394a;font-size:0.85rem;margin:6px 0 0;">Onjuist wachtwoord, probeer opnieuw 🙈</p>
+    <div class="modal-actions" style="margin-top:16px;">
+      <button class="secondaryBtn" id="pwCancel">Annuleer</button>
+      <button class="primaryBtn" id="pwOk">🔓 Verder</button>
+    </div>
+  </div>
+</div>
+
 <script src="script.js"></script>
 </body>
 </html>
