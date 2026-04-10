@@ -25,6 +25,7 @@ const confirmModal     = document.getElementById("confirmModal");
 const confirmDeleteBtn = document.getElementById("confirmDelete");
 const cancelDeleteBtn  = document.getElementById("cancelDelete");
 const favOnlyCheck     = document.getElementById("favOnlyCheck");
+const favOnlyIdeas     = document.getElementById("favOnlyIdeas");
 const hideDoneCheck    = document.getElementById("hideDoneCheck");
 const activeFiltersEl  = document.getElementById("activeFilters");
 
@@ -47,44 +48,96 @@ function showToast(msg) {
   toastTimeout = setTimeout(() => toast.classList.remove("show"), 2200);
 }
 
-// ===== DROPDOWN TOGGLE (viewport-aware) =====
+// ===== DROPDOWN PORTAL =====
+// All dropdowns are moved to <body> on first open so no parent
+// stacking context (backdrop-filter, transform, overflow) can clip them.
+// Position is always recalculated from the trigger button's getBoundingClientRect.
+
+function positionDrop(drop, btn) {
+  const r    = btn.getBoundingClientRect();
+  const vpW  = window.innerWidth;
+  const vpH  = window.innerHeight;
+  const gap  = 6;
+  const margin = 8;
+
+  // Place below button by default
+  drop.style.top    = (r.bottom + gap + window.scrollY) + "px";
+  drop.style.left   = (r.left   + window.scrollX) + "px";
+  drop.style.right  = "auto";
+  drop.style.bottom = "auto";
+  drop.style.minWidth = r.width + "px";
+
+  // Clamp after the browser has painted the dropdown
+  requestAnimationFrame(() => {
+    const dW = drop.offsetWidth;
+    const dH = drop.offsetHeight;
+
+    // Overflow right → right-align with button's right edge
+    if (r.left + dW > vpW - margin) {
+      drop.style.left = (r.right + window.scrollX - dW) + "px";
+    }
+    // Overflow bottom → open upward
+    if (r.bottom + gap + dH > vpH - margin) {
+      drop.style.top  = (r.top + window.scrollY - gap - dH) + "px";
+    }
+  });
+}
+
+function closeAllDrops(except) {
+  document.querySelectorAll(".multi-select-drop").forEach(d => {
+    if (d !== except) d.classList.add("hidden");
+  });
+}
+
 function toggleDropdown(id) {
   const drop = document.getElementById(id);
-  const allDrops = document.querySelectorAll(".multi-select-drop");
-  allDrops.forEach(d => { if (d.id !== id) d.classList.add("hidden"); });
+  const btn  = drop.dataset.portalBtn
+    ? document.querySelector(`[data-portal-for="${id}"]`)
+    : drop.closest(".multi-select-wrap")?.querySelector(".multi-select-btn");
 
-  const isHidden = drop.classList.contains("hidden");
-  drop.classList.toggle("hidden");
+  // First time: move dropdown to <body> as a portal
+  if (drop.parentElement !== document.body) {
+    // Mark original wrap so we keep the reference
+    const wrap = drop.closest(".multi-select-wrap");
+    wrap.dataset.dropId = id;
+    drop.dataset.wrapId = wrap.id || (wrap.id = "wrap-" + id);
 
-  if (isHidden) {
-    // Reset positioning before measuring
-    drop.style.left  = "0";
-    drop.style.right = "auto";
-    drop.style.minWidth = "";
-
-    // Let browser paint, then reposition if needed
-    requestAnimationFrame(() => {
-      const rect      = drop.getBoundingClientRect();
-      const vpWidth   = window.innerWidth;
-      const margin    = 8;
-
-      if (rect.right > vpWidth - margin) {
-        // Overflows right edge → align to right side of button
-        drop.style.left  = "auto";
-        drop.style.right = "0";
-      }
-      if (rect.left < margin) {
-        // Overflows left edge → pin to left
-        drop.style.left  = "0";
-        drop.style.right = "auto";
-      }
-    });
+    drop.style.position = "absolute";
+    drop.style.zIndex   = "99999";
+    document.body.appendChild(drop);
   }
+
+  if (!drop.classList.contains("hidden")) {
+    drop.classList.add("hidden");
+    closeAllDrops(drop);
+    return;
+  }
+
+  closeAllDrops(drop);
+
+  // Find trigger button — it stayed in the original wrap
+  const triggerBtn = document.querySelector(
+    `.multi-select-wrap[data-drop-id="${id}"] .multi-select-btn`
+  ) || btn;
+
+  drop.classList.remove("hidden");
+  if (triggerBtn) positionDrop(drop, triggerBtn);
 }
+
+// Reposition on scroll / resize
+function repositionOpenDropdowns() {
+  document.querySelectorAll(".multi-select-drop:not(.hidden)").forEach(drop => {
+    const id  = drop.id;
+    const btn = document.querySelector(`.multi-select-wrap[data-drop-id="${id}"] .multi-select-btn`);
+    if (btn) positionDrop(drop, btn);
+  });
+}
+window.addEventListener("scroll", repositionOpenDropdowns, { passive: true });
+window.addEventListener("resize", repositionOpenDropdowns, { passive: true });
 
 // Close dropdowns when clicking outside
 document.addEventListener("click", (e) => {
-  if (!e.target.closest(".multi-select-wrap")) {
+  if (!e.target.closest(".multi-select-wrap") && !e.target.closest(".multi-select-drop")) {
     document.querySelectorAll(".multi-select-drop").forEach(d => d.classList.add("hidden"));
   }
 });
@@ -152,6 +205,9 @@ function setupMultiSelectListeners() {
 
   if (hideDoneCheck) {
     hideDoneCheck.addEventListener("change", applyFilters);
+  }
+  if (favOnlyIdeas) {
+    favOnlyIdeas.addEventListener("change", applyFilters);
   }
 }
 
@@ -228,12 +284,15 @@ function applyFilters() {
   const budgets   = getChecked("filt-budget");
   const locations = getChecked("filt-loc");
   const durations = getChecked("filt-dur");
+  const hideDone  = hideDoneCheck ? hideDoneCheck.checked : false;
+  const favOnly   = favOnlyIdeas  ? favOnlyIdeas.checked  : false;
 
   const filtered = allIdeas.filter(idea => {
-    if (idea.done) return false;
-    const matchSearch = !search       || idea.title?.toLowerCase().includes(search) || idea.description?.toLowerCase().includes(search);
-    const matchCat    = !cats.length     || cats.includes(idea.category);
-    const matchBudget = !budgets.length  || budgets.includes(idea.budget);
+    if (hideDone && idea.done) return false;
+    if (favOnly  && !idea.favorite) return false;
+    const matchSearch = !search         || idea.title?.toLowerCase().includes(search) || idea.description?.toLowerCase().includes(search);
+    const matchCat    = !cats.length    || cats.includes(idea.category);
+    const matchBudget = !budgets.length || budgets.includes(idea.budget);
     const matchLoc    = !locations.length || locations.includes(idea.location);
     const matchDur    = !durations.length || durations.includes(idea.duration);
     return matchSearch && matchCat && matchBudget && matchLoc && matchDur;
@@ -242,8 +301,7 @@ function applyFilters() {
   renderActiveFilterChips(cats, budgets, locations, durations);
   renderItems(filtered);
 
-  // FIX: show filtered count, not total
-  ideaCount.innerText = filtered.length;
+  ideaCount.innerText = allIdeas.length;
 }
 
 // ===== ACTIVE FILTER CHIPS =====
@@ -353,10 +411,15 @@ function buildIdeaItem(idea, isDoneTab) {
     fav.title     = newVal ? "Verwijder favoriet" : "Markeer als favoriet";
     fav.classList.toggle("is-fav", newVal);
 
+    // Update title inline for immediate feedback
     const titleEl = li.querySelector("strong");
     if (titleEl) titleEl.innerText = `${idea.title} ${newVal ? "⭐" : ""}`;
 
     showToast(newVal ? "Favoriet toegevoegd ⭐" : "Favoriet verwijderd");
+
+    // Re-apply filters so favorites-only filter in "Verras me" stays in sync
+    applyFilters();
+    if (activeTab === "done") renderDoneList();
   };
 
   // ✅ Done toggle — optimistic update, syncs both tabs
@@ -372,20 +435,49 @@ function buildIdeaItem(idea, isDoneTab) {
     const { error } = await supabaseClient.from("date_ideas").update({ done: newVal }).eq("id", idea.id);
     if (error) { showToast("❌ Fout bij opslaan"); return; }
 
-    // Update local state immediately — no full re-fetch
+    // Update local state immediately
     idea.done = newVal;
     const idx = allIdeas.findIndex(i => i.id === idea.id);
     if (idx !== -1) allIdeas[idx].done = newVal;
 
     showToast(newVal ? "Gemarkeerd als gedaan ✅" : "Terug gezet naar ideeën 💭");
 
-    // Animate out, then re-render whichever view is active
-    li.classList.add("removing");
-    setTimeout(() => {
-      applyFilters();              // refreshes ideas tab + count
-      if (activeTab === "done") renderDoneList(); // refreshes done tab
-      if (doneCount) doneCount.innerText = allIdeas.filter(i => i.done).length;
-    }, 280);
+    // Update done count badge
+    if (doneCount) doneCount.innerText = allIdeas.filter(i => i.done).length;
+
+    const hideDone = hideDoneCheck ? hideDoneCheck.checked : false;
+
+    if (hideDone && newVal) {
+      // "Verberg gedaan" is actief én item wordt gedaan → animeer weg
+      li.classList.add("removing");
+      setTimeout(() => {
+        applyFilters();
+        if (activeTab === "done") renderDoneList();
+      }, 280);
+    } else {
+      // Item blijft zichtbaar in "Jouw ideeën" — update icoon en stijl in-place
+      done.className = "iconBtn done-btn" + (newVal ? " is-done" : "");
+      done.title     = newVal ? "Zet terug naar ideeën" : "Markeer als gedaan";
+      done.innerHTML = newVal
+        ? `<span class="done-icon-wrap done-active"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7.5" stroke="#2a7a50" stroke-width="1.5" fill="rgba(60,180,100,0.15)"/><path d="M4.5 8.5l2.5 2.5 4.5-5" stroke="#2a7a50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`
+        : `<span class="done-icon-wrap"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7.5" stroke="#aaa" stroke-width="1.5" fill="none"/><path d="M4.5 8.5l2.5 2.5 4.5-5" stroke="#ccc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`;
+
+      // Voeg done-item class toe/verwijder voor visuele stijl
+      li.classList.toggle("done-item", newVal);
+
+      // Update done badge in item
+      const badgesEl = li.querySelector(".item-badges");
+      if (badgesEl) {
+        const existingDone = badgesEl.querySelector(".done-badge");
+        if (newVal && !existingDone) {
+          badgesEl.insertAdjacentHTML("afterbegin", `<span class="done-badge">✅ Gedaan</span>`);
+        } else if (!newVal && existingDone) {
+          existingDone.remove();
+        }
+      }
+
+      if (activeTab === "done") renderDoneList();
+    }
   };
 
   // ✏️ Edit
@@ -502,13 +594,14 @@ addBtn.onclick = async () => {
 
 // ===== RANDOM =====
 document.getElementById("generateBtn").onclick = async () => {
-  const favOnly     = favOnlyCheck.checked;
+  const favOnly      = favOnlyCheck.checked;
+  const hideDoneRand = document.getElementById("hideDoneRandom")?.checked ?? true;
   const randCats    = getChecked("rand-cat");
   const randBudgets = getChecked("rand-budget");
   const randLocs    = getChecked("rand-loc");
   const randDurs    = getChecked("rand-dur");
 
-  let pool = allIdeas.filter(i => !i.done);
+  let pool = allIdeas.filter(i => !hideDoneRand || !i.done);
 
   if (favOnly) pool = pool.filter(i => i.favorite);
 
@@ -523,7 +616,7 @@ document.getElementById("generateBtn").onclick = async () => {
   // OR across ALL active filter groups combined: item matches if it satisfies any selected value
   const hasAnyFilter = randCats.length || randBudgets.length || randLocs.length || randDurs.length;
   if (hasAnyFilter) {
-    pool = allIdeas.filter(i => !i.done && (!favOnly || i.favorite)).filter(i =>
+    pool = allIdeas.filter(i => (!hideDoneRand || !i.done) && (!favOnly || i.favorite)).filter(i =>
       (randCats.length    && randCats.includes(i.category))  ||
       (randBudgets.length && randBudgets.includes(i.budget)) ||
       (randLocs.length    && randLocs.includes(i.location))  ||
