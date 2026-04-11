@@ -8,7 +8,7 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 //   app_config (key TEXT PK, value TEXT)
 //   INSERT INTO app_config VALUES ('password_hash', sha256('yourPassword'));
 // Default password is "liefde" (sha256 below). Change it in Supabase!
-const DEFAULT_PASSWORD_HASH = "9d36e1511c8be2a73e8e33e19a5e9c960c6d64ebcc56ee15d74c6c8e12a0ef30";
+const DEFAULT_PASSWORD_HASH = "b0eaeafbf3fadbe6d70268e131724ec7421ffc3d18653e2fb33a7db10e70ac83";
 
 let isAuthenticated = false;
 let sessionId = null;
